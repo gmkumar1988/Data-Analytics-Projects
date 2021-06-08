@@ -92,18 +92,47 @@ model_fit_prophet_boost <- modeltime::prophet_boost() %>%
   parsnip::set_engine("prophet_xgboost") %>%
   parsnip::fit(value ~ date + as.numeric(date) + month(date, label = TRUE),
                data = training(splits))
-
-
+#Model Time 
 model_tbl <- modeltime_table(model_fits_ets,
                              model_fits_arima,
                              model_fits_arima_boost,
                              model_fits_propher,
                              model_fit_prophet_boost )
 
+#Calibrate the model accuracy
+calibration_tbl <- model_tbl %>%
+  modeltime_calibrate(testing(splits))
 
 
+calibration_tbl %>% 
+  modeltime_accuracy() %>%
+  flextable() %>%
+  bold(part = "header") %>%
+  bg(bg = "#D3D3D3", part = "header") %>%
+  autofit()
 
 
+refit_tbl <- calibration_tbl %>%
+  modeltime_refit(data = gtrends_search_tbl)
+
+forecast_tbl <- refit_tbl %>%
+  modeltime_forecast(h = "1 year",actual_data = gtrends_search_tbl, conf_interval = 0.90)
+
+forecast_tbl %>%
+  plot_modeltime_forecast(.interactive = TRUE)
+
+
+mean_forecast_tbl <- forecast_tbl %>%
+  filter(.key != "actual") %>%
+  group_by(.key,.index) %>%
+  summarise(across(.value:.conf_hi,mean)) %>%
+  mutate(.model_id = 6, .model_desc = "Average Of Models")
+
+
+forecast_tbl %>% filter(.key == "actual") %>%
+  bind_rows(mean_forecast_tbl) %>%
+  plot_modeltime_forecast()
+ 
 
 
 
