@@ -8,19 +8,32 @@ library(janitor)
 
 file.choose()
 
-gdp <- read.csv("D://Mahesh Files//R Working Files//GDP_V1.csv")
+gdp <- read.csv("D://Mahesh Files//R Working Files//GDP_V2.csv")
 
 View(gdp)
 
-gdp <- gdp %>% select(3:15)
 
-gdp <- gdp[1:266,]
+###Removing X in the Colnames :
+names(gdp)<-sapply(str_remove_all(colnames(gdp),"X"),"[")
+
+
+
+#select required columns
+gdp <- gdp %>% select(3:16) 
+
+#filter only country rows
+
+gdp <- gdp[1:217,]
+
+
 
 gdp_tidy <- gdp %>% 
   mutate_at(vars(contains("YR")),as.numeric) %>% 
-  gather(year,value,3:13) %>% 
+  gather(year,value,3:10) %>% 
   janitor::clean_names() %>% 
-  mutate(year = as.numeric(stringr::str_sub(year,1,4)))
+  mutate(year = as.numeric(stringr::str_sub(year,1,6)))
+
+
 
 
 write_csv(gdp_tidy,"D:/Mahesh Files/R Working Files/gdp_tidy.csv")
@@ -31,6 +44,7 @@ library(gganimate)
 
 gdp_tidy <- read.csv("D:/Mahesh Files/R Working Files/gdp_tidy.csv")
 
+View(gdp_tidy)
 
 gdp_formatted <- gdp_tidy %>%
   group_by(year) %>%
@@ -39,13 +53,12 @@ gdp_formatted <- gdp_tidy %>%
          Value_rel = value/value[rank==1],
          Value_lbl = paste0(" ",round(value/1e9))) %>%
   group_by(country_name) %>% 
-  filter(rank <=10) %>%
+  filter(rank <=50) %>%
   ungroup()
 
 
-
-staticplot = ggplot(gdp_formatted, aes(rank, group = country_name, 
-                                       fill = as.factor(country_name), color = as.factor(country_name))) +
+anim <- ggplot(gdp_formatted, aes(rank, group = country_name, 
+                                  fill = as.factor(country_name), color = as.factor(country_name))) +
   geom_tile(aes(y = value/2,
                 height = value,
                 width = 0.9), alpha = 0.8, color = NA) +
@@ -72,8 +85,12 @@ staticplot = ggplot(gdp_formatted, aes(rank, group = country_name,
         plot.subtitle=element_text(size=18, hjust=0.5, face="italic", color="grey"),
         plot.caption =element_text(size=8, hjust=0.5, face="italic", color="grey"),
         plot.background=element_blank(),
-        plot.margin = margin(2,2, 2, 4, "cm"))
-
+        plot.margin = margin(2,2, 2, 4, "cm")) +
+  transition_states(year, transition_length = 4, state_length = 1, wrap = FALSE) +
+  view_follow(fixed_x = TRUE)  +
+  labs(title = 'GDP per Year : {closest_state}',  
+       subtitle  =  "Top 10 Countries",
+       caption  = "GDP in Billions USD | Data Source: World Bank Data") 
 
 
 anim = staticplot + transition_states(year, transition_length = 4, state_length = 1) +
@@ -82,8 +99,8 @@ anim = staticplot + transition_states(year, transition_length = 4, state_length 
        subtitle  =  "Top 10 Countries",
        caption  = "GDP in Billions USD | Data Source: World Bank Data")
 
-install.packages("gifski")
-library(gifski)
 
 animate(anim, 200, fps = 20,  width = 1200, height = 1000, 
-        renderer = gifski_renderer("gganim.gif"))
+        renderer = gifski_renderer(), end_pause = 15, start_pause =  15) 
+
+
