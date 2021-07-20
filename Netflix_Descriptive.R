@@ -76,16 +76,13 @@ netflix_tt_movies %>%
   mutate(percentage = n/ sum(n)) %>%
   mutate (rating = factor(rating, levels = rev(mpa_tt)))%>%
   ggplot(aes(x = year_added, y = percentage, fill = rating)) +
-  geom_col() +
+  geom_bar() +
   theme_classic() +
   scale_fill_viridis_d() +
-  scale_x_continuous(breaks = seq(2008, 2021, by = 1)) +
+  scale_x_continuous(breaks = seq(2010, 2021, by = 1)) +
   scale_y_continuous(labels = scales::percent_format(scale = 100)) +
   labs(y = "Percentage Films got added in Netflix", x = "Year Details", fill = "Motion Poster Animated Films",
        title = "Motion Poster Animated rated films added to Netflix on yearly basis",
        subtitle = "Year vs Percentage of Motion Picture Association (MPA) rated films added")
-
-
-
 
 
