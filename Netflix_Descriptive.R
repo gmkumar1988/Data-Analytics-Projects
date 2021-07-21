@@ -26,7 +26,7 @@ netflix_tt_movies <- netflix_tt$netflix_titles %>%
   mutate (year_added = as.numeric(str_sub(date_added, start = -4)))
 
 #Creating a vector Moition Poster Animated Film Ratings for segregation :
-mpa_tt <- c("General Audience","With Parent Guidance","Strongly Cautioned People","Strictly Restricted","Adults Only")
+mpa_tt <- c("TV-MA","R","Strongly Cautioned People","Strictly Restricted","Adults Only")
 
 str(mpa_tt)
 
@@ -51,25 +51,23 @@ top_netflix__movies_words <- netflix_tt$netflix_titles %>%
 # Plotting the graph: 
 netflix_tt_movies %>%
   filter(type == "Movie" & !is.na(rating)) %>%
-  filter(rating %in% mpa_tt) %>%
+  filter(rating == "R") %>%
   mutate(rating = factor(rating, levels = rev(mpa_tt))) %>%
   ggplot(aes(x = rating, y = runtime, fill = rating)) +
-  geom_abline() +
   geom_hline(yintercept = 90, linetype = 5) +
   coord_flip() +
   theme_classic() +
   scale_fill_viridis_d() + 
   theme(legend.position = "none") +
+  scale_x_continuous(breaks = 0:200) +
   labs(x = "Film Rating", y = "Film Duration (in minutes)",
        title = "Film Rating vs Duration in minutes, straight line at 90 minutes",
        subtitle = "Films focused at younger audiences tends to be lesser than others")
   
 
-
-
 #Plotting the graph in alternate view : 
 netflix_tt_movies %>%
-  filter(rating %in% mpa_tt & !is.na(year_added)) %>%
+  filter(rating %in% mpa_tt) %>%
   select(year_added, rating) %>%
   group_by(year_added) %>%
   count(rating) %>%
@@ -84,5 +82,8 @@ netflix_tt_movies %>%
   labs(y = "Percentage Films got added in Netflix", x = "Year Details", fill = "Motion Poster Animated Films",
        title = "Motion Poster Animated rated films added to Netflix on yearly basis",
        subtitle = "Year vs Percentage of Motion Picture Association (MPA) rated films added")
+
+
+
 
 
