@@ -1,89 +1,93 @@
-# Installation of necessary libraries
-library(dplyr)
-library(tidyverse)
-install.packages(c("tidytext","tidytuesdayR","forcats"))
-library(tidytext)
-library(tidytuesdayR)
-library(forcats)
-install.packages("stringr")
-library(stringr) #to be used whenever we use str_sub
-library(ggplot2)
+tt <- tt_load("2021-04-20")
 
-# Loading the necessary dataset:
-netflix_tt <- tt_load("2021-04-20")
-head(netflix_tt)
+
 
 # Selecting the films in the data set, creating a numeric variable for film
 ## duration called "runtime", creating a numeric variable for year added
-
-View(netflix_tt$netflix_titles)
-str(netflix_tt$netflix_titles)
-
-#Adding Two Columns in the dataframe for analysis: 
-netflix_tt_movies <- netflix_tt$netflix_titles %>%
+netflix_movies <- tt$netflix_titles %>%
   filter(type == "Movie") %>%
   mutate(runtime = as.numeric(str_sub(duration, end = -5))) %>%
-  mutate (year_added = as.numeric(str_sub(date_added, start = -4)))
+  mutate(year_added = as.numeric(str_sub(date_added, start = -4)))
 
-#Creating a vector Moition Poster Animated Film Ratings for segregation :
-mpa_tt <- c("TV-MA","R","Strongly Cautioned People","Strictly Restricted","Adults Only")
+# Creating a vector of MPA film ratings
+mpa_tt <- c("General Audience","Parental Guidance","Strongly Cautioned People","Strictly Restricted","Adults Only")
 
-str(mpa_tt)
-
-#Creating Top Categories listed on the netflix dataset : 
-
-str(netflix_tt_movies)
-top_netflix_movies <- netflix_tt$netflix_titles %>%
-  tidyr::separate_rows(listed_in, sep = ", ") %>%
+# Creating a list of the top categories ("listed in") on Netflix
+top_listings <- tt$netflix_titles %>%
+  separate_rows(listed_in, sep = ", ") %>%
   count(listed_in, sort = TRUE) %>%
   select(listed_in) %>%
   head()
-
-#Creating Frequent Occurence Words in the dataset of the above categories: 
-top_netflix__movies_words <- netflix_tt$netflix_titles %>%
-  tidyr::separate_rows(listed_in, sep = ",") %>%
-  filter(listed_in %in% top_netflix_movies$listed_in ) %>%
+# Counting the occurrences of words in the descriptions of these top categories
+top_listing_words <- tt$netflix_titles %>%
+  separate_rows(listed_in, sep = ", ") %>%
+  filter(listed_in %in% top_listings$listed_in) %>%
   select(listed_in, description) %>%
-  unnest_tokens(word,description) %>%
+  unnest_tokens(word, description) %>%
   anti_join(stop_words, by = "word") %>%
   count(listed_in, word, sort = TRUE)
+# Counting the total number of words in the descriptions of these top categories
+total_words <- top_listing_words %>%
+  group_by(listed_in) %>%
+  summarise(total = sum(n))
+# Adding word totals to individual word counts
+top_listing_words <- left_join(top_listing_words, total_words, by = "listed_in")
+# Adding tf-idf to these word counts
+top_listing_words <- top_listing_words %>%
+  bind_tf_idf(word, listed_in, n)
 
-# Plotting the graph: 
-netflix_tt_movies %>%
+
+
+
+
+
+# Plotting distributions of film length according to MPA rating
+netflix_movies %>%
   filter(type == "Movie" & !is.na(rating)) %>%
-  filter(rating == "R") %>%
-  mutate(rating = factor(rating, levels = rev(mpa_tt))) %>%
+  filter(rating %in% MPA_ratings) %>%
+  mutate(rating = factor(rating, levels = rev(MPA_ratings))) %>%
   ggplot(aes(x = rating, y = runtime, fill = rating)) +
-  geom_hline(yintercept = 90, linetype = 5) +
+  geom_violin() +
+  geom_hline(yintercept = 90, linetype = 2) +
   coord_flip() +
   theme_classic() +
-  scale_fill_viridis_d() + 
+  scale_fill_viridis_d() +
   theme(legend.position = "none") +
-  scale_x_continuous(breaks = 0:200) +
   labs(x = "Film Rating", y = "Film Duration (in minutes)",
-       title = "Film Rating vs Duration in minutes, straight line at 90 minutes",
+       title = "Film Rating vs Duration in Minutes",
        subtitle = "Films focused at younger audiences tends to be lesser than others")
-  
 
-#Plotting the graph in alternate view : 
-netflix_tt_movies %>%
-  filter(rating %in% mpa_tt) %>%
+
+
+
+#Alternate View - YOY vs Animated Film Details :
+
+netflix_movies %>%
+  filter(rating %in% MPA_ratings & !is.na(year_added)) %>%
   select(year_added, rating) %>%
   group_by(year_added) %>%
   count(rating) %>%
-  mutate(percentage = n/ sum(n)) %>%
-  mutate (rating = factor(rating, levels = rev(mpa_tt)))%>%
+  mutate(percentage = n / sum(n)) %>%
+  mutate(rating = factor(rating, levels = rev(MPA_ratings))) %>%
   ggplot(aes(x = year_added, y = percentage, fill = rating)) +
-  geom_bar() +
+  geom_col() +
   theme_classic() +
   scale_fill_viridis_d() +
-  scale_x_continuous(breaks = seq(2010, 2021, by = 1)) +
+  scale_x_continuous(breaks = seq(2008, 2021, by = 1)) +
   scale_y_continuous(labels = scales::percent_format(scale = 100)) +
-  labs(y = "Percentage Films got added in Netflix", x = "Year Details", fill = "Motion Poster Animated Films",
-       title = "Motion Poster Animated rated films added to Netflix on yearly basis",
+  labs(y = "Percentage Films got added in Netflix", x = "Year Details", fill = "Animated Film Ratings",
+       title = "Animated rated films added to Netflix on yearly basis",
        subtitle = "Year vs Percentage of Motion Picture Association (MPA) rated films added")
 
 
 
 
-
+top_listing_words %>%
+  slice_max(tf_idf, n = 20) %>%
+  ggplot(aes(tf_idf, fct_reorder(word, tf_idf), fill = listed_in)) +
+  geom_col() +
+  theme_classic() +
+  labs(y = "Word", x = "Term frequency-inverse document frequency (tf-idf)",
+       fill = "Netflix categories",
+       title = "Significant words in common Netflix category descriptions",
+       subtitle = "Words that appear often in these categories and not others")
