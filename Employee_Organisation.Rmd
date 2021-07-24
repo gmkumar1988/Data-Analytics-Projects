@@ -1,0 +1,46 @@
+---
+title: "Employees Vs Organization using Descriptive Analysis"
+author: "Mahesh Gurumoorthi"
+source data: "Kaggle"
+date: "24/07/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Human Resource Analytics (Descriptive Analysis)
+
+This is a Markdown document about Analytics - Human Resource in an Organization
+
+
+```{r cars}
+library(readr)
+library(dplyr)
+peopledataset <- read.csv("/Users/maheshgurumoorthi/Dropbox/People Analytics Dataset/hr_analytics.csv")
+glimpse(peopledataset)
+set.seed(1000)
+subsIndex <- sample(1:nrow(peopledataset), 0.2*nrow(peopledataset))
+subs <- peopledataset[subsIndex,]
+attach(subs)
+library(ggplot2)
+
+```
+
+## Plot View Analysis:
+
+
+```{r pressure, echo=FALSE}
+plot(last_evaluation,satisfaction_level, main = "Performance View of Satisfaction Level Last Vs Recent ", 
+     xlab = " Last Evaluation:", ylab = "Satisfaction Level:")
+plot(factor(salary), time_spend_company, main = " Time and Salary Spent by an Organization",
+     xlab = "Salary", ylab = "Time Spent at Company", pch = 19)
+plot(average_montly_hours, time_spend_company, main = " Average Hours and Salary Spent by an Organization",
+     xlab = "Salary USD$", ylab = "Time Spent at Company in Hrs", pch = 19)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
