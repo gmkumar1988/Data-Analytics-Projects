@@ -1,0 +1,51 @@
+install.packages("dplyr")
+library(dplyr)
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("patchwork")
+library(patchwork)
+install.packages("janitor")
+library(janitor)
+install.packages("gapminder")
+library(gapminder)
+View(gapminder)
+data <- gapminder::gapminder %>%
+  janitor::clean_names() %>%
+  mutate(
+    # Reformat continent as a character instead of as a factor
+    # (will be important later)
+    id = levels(continent)[as.numeric(continent)],
+    continent = forcats::fct_reorder(continent, life_exp)
+  )
+
+install.packages("thematic")
+library(thematic)
+
+color_palette <- thematic::okabe_ito(5)
+names(color_palette) <- unique(data$continent)
+base_size <- 18
+mean_life_exps <- data %>%
+  group_by(continent, year, id) %>% 
+  summarise(mean_life_exp = mean(life_exp)) %>% 
+  ungroup()
+
+line_chart <- mean_life_exps %>%
+  ggplot(aes(x = year, y = mean_life_exp, col = continent)) +
+  geom_line(linewidth = 2.5) +
+  geom_point(size = 4) +
+  theme_minimal(base_size = base_size) +
+  labs(
+    x = element_blank(),
+    y = 'Life expectancy (years)',
+    title = 'Life expectancy starting from 1950 till 2011'
+  ) +
+  theme(
+    text = element_text(
+      color = 'grey'
+    ),
+    legend.position = 'none',
+    panel.grid.minor = element_blank(),
+    plot.title.position = 'plot'
+  ) +
+  scale_color_manual(values = color_palette)
+line_chart
