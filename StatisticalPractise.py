@@ -6,6 +6,7 @@ Created on Fri May 19 18:54:06 2023
 @author: maheshg
 """
 
+###Numpy - Multidimensional Arrays:
 import numpy as np
 
 a = np.array([1,2,3])
@@ -82,3 +83,20 @@ print(np.sqrt(x))
 np.sum(x, axis=0)
 
 np.sum(y, axis = 0)
+
+
+
+###Scipy Libraries 
+from scipy import stats
+import numpy as np
+
+print(stats.norm.rvs(size = 10000))
+
+from pylab import *
+
+##some test data : 
+dx = .01
+X = np.arange(-2,2,dx )
+plot(X)
+Y = exp(-X **2)
+
