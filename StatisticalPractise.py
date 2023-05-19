@@ -78,3 +78,7 @@ print(x-y)
 print(x*y)
 print(x/y)
 print(np.sqrt(x))
+
+np.sum(x, axis=0)
+
+np.sum(y, axis = 0)
