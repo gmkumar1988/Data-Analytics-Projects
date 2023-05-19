@@ -66,3 +66,15 @@ print(j.dtype)
 
 k = np.array([1.0,3.0,5.3])
 print(k.dtype)
+
+l = np.array([1.0,3.5,5.7], dtype = np.int64)
+print(l.dtype)
+
+x = np.array([[1,2],[4,5]], dtype = np.float64)
+y = np.array([[1,3],[7,8]], dtype = np.float64)
+
+print( x + y)
+print(x-y)
+print(x*y)
+print(x/y)
+print(np.sqrt(x))
