@@ -56,3 +56,13 @@ i = h[:2,1:3]
 
 print(i)
 
+i[0,0] = 500
+
+print(h)
+
+
+j = np.array([1,2])
+print(j.dtype)
+
+k = np.array([1.0,3.0,5.3])
+print(k.dtype)
