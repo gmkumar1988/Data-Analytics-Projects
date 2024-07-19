@@ -6,9 +6,20 @@
 -- ORDER BY custcount
 
 
+-- SELECT 
+--     [Postal Code]
+-- FROM dimCustomer
+-- WHERE [Buying Group] = 'Wingtip Toys'
+-- GROUP BY [Postal Code]
+-- HAVING COUNT([Customer Key]) > 3
+
 SELECT 
-    [Postal Code]
+    [Postal Code],
+    [Customer]
 FROM dimCustomer
-WHERE [Buying Group] = 'Wingtip Toys'
-GROUP BY [Postal Code]
-HAVING COUNT([Customer Key]) > 3
+WHERE [Postal Code] IN (SELECT
+                            [Postal Code]
+                            FROM dimCustomer
+                            where [Buying Group]= 'Wingtip Toys'
+                            GROUP BY [Postal Code]
+                            HAVING COUNT ([Customer Key])> 3)
