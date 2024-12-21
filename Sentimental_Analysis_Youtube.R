@@ -63,5 +63,17 @@ head(dtm_d,5)
 
 #Plot the most frequent words 
 barplot(dtm_d[1:5,]$freq,las = 2,names.arg = dtm_d[1:5,]$word,
-        col = "lightgreen",main = "Top 5 most frequent words",
-        ylab = "Most Frequent words used in Youtube")
+        col = "lightgreen",main = "Top 5 most frequent words from YouTube Comments",
+        ylab = "Most Frequent words used in Comments")
+
+#Generate the word count details : 
+set.seed(1234)
+wordcloud(dtm_d$word,freq = dtm_d$freq,min.freq = 5,
+          max.words = 100,random.order = FALSE,rot.per = 0.40,
+          colors = brewer.pal(8,"Dark2"))
+
+#Find Associations: 
+findAssocs(textdocument_matrix,terms = c("good","work","health"),corlimit = 0.25)
+
+#Find associations words which is used at least 50 times: 
+findAssocs(textdocument_matrix,terms = findFreqTerms(textdocument_matrix, lowfreq = 50), corlimit = 0.25)
